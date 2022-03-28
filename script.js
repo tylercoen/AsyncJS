@@ -4,7 +4,7 @@ const btn = document.querySelector('.btn-country');
 const countriesContainer = document.querySelector('.countries');
 const renderError = function (msg) {
   countriesContainer.insertAdjacentText('beforeend', msg);
-  //countriesContainer.style.opacity = 1;
+  countriesContainer.style.opacity = 1;
 };
 const renderCountry = function (data, className = '') {
   //console.log(data);
@@ -27,7 +27,7 @@ const renderCountry = function (data, className = '') {
       </div>
     </article>`;
   countriesContainer.insertAdjacentHTML('beforeend', html);
-  //countriesContainer.style.opacity = 1;
+  countriesContainer.style.opacity = 1;
 };
 ///////////////////////////////////////
 //https://restcountries.com/v3.1/name/{name}
@@ -64,6 +64,7 @@ const getCountryData = function (country) {
 getCountryData('portugal');
 getCountryData('usa');
 */
+/*
 const getCountryAndNeighbor = function (country) {
   //AJAX call country 1
   const request = new XMLHttpRequest(); //old school AJAX call
@@ -93,7 +94,7 @@ const getCountryAndNeighbor = function (country) {
   });
 };
 //getCountryAndNeighbor('usa');
-
+*/
 /////// MODERN WAY TO MAKE AJAX CALLS /////////////////////
 /* old way vvvvvvvvvv
 const request = new XMLHttpRequest(); //old school AJAX call
@@ -161,22 +162,31 @@ Coordinates1: 52.508, 13.381 (lat, lng)
 Coordinates2: 19.037, 72.873
 Coordinates3: -33.933, 18.474
 */
+/*
+/////////////// Finding country w/ lat/long
 const whereAmI = function (lat, lng) {
   fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`)
     .then(response => {
       console.log(response);
       if (!response.ok)
-        throw new Error(`${err.message} wait a little while longer`);
+        throw new Error(`${response.status} wait a little while longer`);
       return response.json();
     })
     .then(data => {
       console.log(data);
       console.log(`You are in ${data.city}, ${data.country}`);
-      const country = data.country;
-      getCountryAndNeighbor(country);
+      return fetch(`https://restcountries.com/v3.1/name/${data.country}`);
     })
+    .then(response => {
+      if (!response.ok)
+        throw new Error(`Country not founds(${response.status})`);
+      return response.json();
+    })
+    .then(data => renderCountry(data[0]))
     .catch(err => {
-      console.error(`${err}💥💥💥💥`);
+      console.error(`${err.message}💥💥💥`);
     });
 };
 whereAmI(52.508, 13.381);
+*/
+/////////// ASYNCHRONOUS EVENT LOOP //////////////
