@@ -190,3 +190,147 @@ const whereAmI = function (lat, lng) {
 whereAmI(52.508, 13.381);
 */
 /////////// ASYNCHRONOUS EVENT LOOP //////////////
+/*
+console.log('Test start'); //return 1st
+setTimeout(() => console.log('0 sec timer'), 0); //return 5th
+Promise.resolve('Resolved promise 1').then(res => console.log(res)); //return 3rd
+Promise.resolve('Resolved promise 2').then(res => {
+  for (let i = 0; i < 10000000; i++) {} //return 4th
+  console.log(res);
+});
+console.log('Test end'); //return 2nd
+*/
+/*
+const lotteryPromise = new Promise(function (resolve, reject) {
+  console.log('Lottery draw is happening 🔮');
+  setTimeout(function () {
+    if (Math.random() >= 0.5) {
+      resolve('You WIN 🏆');
+    } else {
+      reject(new Error('You lost💩'));
+    }
+  }, 2000);
+});
+
+lotteryPromise.then(res => console.log(res)).catch(err => console.error(err));
+
+//Promisifying setTimeout
+const wait = seconds => {
+  return new Promise(resolve => {
+    setTimeout(resolve, seconds * 1000);
+  });
+};
+
+wait(2)
+  .then(() => {
+    console.log('That took two seconds');
+    return wait(1);
+  })
+  .then(() => console.log('That took one second'));
+
+Promise.resolve('Resolves immediately').then(x => console.log(x));
+Promise.reject('Promise immediately rejected').catch(x => console.error(x));
+*/
+/*
+const getPosition = function () {
+  return new Promise(function (resolve, reject) {
+    navigator.geolocation.getCurrentPosition(resolve, reject);
+  });
+};
+
+getPosition().then(pos => console.log(pos));
+
+const whereAmI = function () {
+  getPosition()
+    .then(pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+
+      return fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
+    })
+
+    .then(response => {
+      console.log(response);
+      if (!response.ok)
+        throw new Error(`${response.status} wait a little while longer`);
+      return response.json();
+    })
+    .then(data => {
+      console.log(data);
+      console.log(`You are in ${data.city}, ${data.country}`);
+      return fetch(`https://restcountries.com/v3.1/name/${data.country}`);
+    })
+    .then(response => {
+      if (!response.ok)
+        throw new Error(`Country not founds(${response.status})`);
+      return response.json();
+    })
+    .then(data => renderCountry(data[0]))
+    .catch(err => {
+      console.error(`${err.message}💥💥💥`);
+    });
+};
+
+btn.addEventListener('click', whereAmI);
+*/
+///////////////////////////////////////////////////
+//Coding Challenge #2
+/*
+For this challenge you will actually have to watch the video. Then, build the image loading functionality that I just showed you on screen.
+
+Your tasks:
+Tasks are not super descriptive this time, so you can figure out some stuff by yourself. Pretend you're working on your own.
+//Part 1
+1. Create a function 'createImage' which receives 'imgPath' as an input. This function returns a promise which creates a new image (use document.createElement('img)) and sets the .src attribute to the provided image path (check sidebar).
+2. When the iamge is done loading, append it to the DOM element with the 'images' class, and resolve the promise. The fulfilled value should be the image element itself. In case there is an error loading the image (listen for the 'error' event) reject the promise.
+3. If this part is too tricky for you, just watch the first part of the solution.
+
+//Part 2
+4. Consume the promise using.then and also add an error handler.
+5. After the imge has loaded, pause execution for 2 seconds using the 'wait' function we created earlier.
+
+6. After the 2 seconds have passed, hide the current image (set display CSS property to 'none'), and load a second image (Hint: use the image element returned by the 'createImage' promise to hide the current image). You will need a global variable for that).
+7. After the second image has loaded, pause execution for 2 seconds again.
+8. After the 2 seconds have passed, hide the current image.
+
+Test data: images in the img folder. Test the error handler by passing a wrong img path. Set the network speed to 'Fast 3G' in the dev tools Network tab, otherwise the images load too fast.
+*/
+
+const wait = seconds => {
+  return new Promise(resolve => {
+    setTimeout(resolve, seconds * 1000);
+  });
+};
+
+const createImage = imgPath => {
+  return new Promise(
+    resolve => {
+      const newImg = document.createElement('img');
+      newImg.src = imgPath;
+      newImg.addEventListener('load', function () {
+        const nearestImgClass = document.querySelector('.images');
+        const removeButton = document.querySelector('button');
+        if (removeButton !== null) {
+          removeButton.remove();
+        }
+
+        nearestImgClass.insertAdjacentElement('afterbegin', newImg);
+      });
+    },
+    reject => {
+      new Error('Image failed to load');
+    }
+  ).catch(err => {
+    console.error(`${err.message}`);
+  });
+};
+wait(2)
+  .then(() => {
+    document.querySelector('img').style.display = 'none';
+  })
+  .then(() => {
+    createImage('img/img-2.jpg');
+  });
+
+createImage('img/img-1.jpg');
+
+//inputElevation.closest('.form__row').classList.toggle('form__row--hidden')
