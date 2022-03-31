@@ -294,26 +294,26 @@ Tasks are not super descriptive this time, so you can figure out some stuff by y
 
 Test data: images in the img folder. Test the error handler by passing a wrong img path. Set the network speed to 'Fast 3G' in the dev tools Network tab, otherwise the images load too fast.
 */
-
+/*
 const wait = seconds => {
   return new Promise(resolve => {
     setTimeout(resolve, seconds * 1000);
   });
 };
-
+const nearestImgClass = document.querySelector('.images');
 const createImage = imgPath => {
   return new Promise(
     resolve => {
       const newImg = document.createElement('img');
       newImg.src = imgPath;
       newImg.addEventListener('load', function () {
-        const nearestImgClass = document.querySelector('.images');
         const removeButton = document.querySelector('button');
         if (removeButton !== null) {
           removeButton.remove();
         }
 
         nearestImgClass.insertAdjacentElement('afterbegin', newImg);
+        resolve(newImg);
       });
     },
     reject => {
@@ -330,7 +330,210 @@ wait(2)
   .then(() => {
     createImage('img/img-2.jpg');
   });
-
+wait(4).then(() => {
+  nearestImgClass.style.opacity = 0;
+});
 createImage('img/img-1.jpg');
 
 //inputElevation.closest('.form__row').classList.toggle('form__row--hidden')
+*/
+/*
+/////////////// CONSUMING PROMISES w/ ASYNC AWAIT
+const getPosition = function () {
+  return new Promise(function (resolve, reject) {
+    navigator.geolocation.getCurrentPosition(resolve, reject);
+  });
+};
+
+const whereAmI = async function () {
+  try {
+    // Geolocation
+    const pos = await getPosition();
+    const { latitude: lat, longitude: lng } = pos.coords;
+    // reverse geo coding
+    const resGeo = await fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
+    if (!resGeo.ok) throw new Error('Problem getting location data');
+    const dataGeo = await resGeo.json();
+    //country data
+    const res = await fetch(
+      `https://restcountries.com/v3.1/name/${dataGeo.country}`
+    ); //returns resolved promise w/o blocking call stack
+    if (!resGeo.ok) throw new Error('Problem getting country');
+    const data = await res.json();
+    console.log(data);
+    renderCountry(data[0]);
+    return `You are in ${dataGeo.city}, ${dataGeo.country}`;
+  } catch (err) {
+    //won't catch 403/404 have to create the  if (!resGeo.ok) throw new Error
+    console.error(err);
+    renderError(`${err.message}`);
+
+    // reject promise returned from async function
+    throw err;
+  }
+};
+
+//console.log('1: Will get location');
+//whereAmI() //returns a promise
+//  .then(city => console.log(`2: ${city}`))
+//  .catch(err => console.log(`2: ${err.message}`))
+// .finally(() => console.log(`3: Finished getting location`));
+
+(async function () {
+  try {
+    const city = await whereAmI();
+    console.log(`2: ${city}`);
+  } catch (err) {
+    renderError(`${err.message}`);
+  }
+  console.log(`3: Finished getting location`);
+})();
+*/
+
+// from before
+const getJSON = function (url, errorMsg = `Something went wrong`) {
+  return fetch(url).then(response => {
+    if (!response.ok) throw new Error(`${errorMsg} (${response.status})`);
+    return response.json();
+  });
+};
+/*
+/////// Running promises in parallel.
+
+const get3Countries = async function (c1, c2, c3) {
+  try {
+    //const [data1] = await getJSON(`https://restcountries.com/v3.1/name/${c1}`);
+    //const [data2] = await getJSON(`https://restcountries.com/v3.1/name/${c2}`);
+    //const [data3] = await getJSON(`https://restcountries.com/v3.1/name/${c3}`);
+    const data = await Promise.all([
+      //takes an array of promises runs them at once and returns one promise
+      getJSON(`https://restcountries.com/v3.1/name/${c1}`),
+      getJSON(`https://restcountries.com/v3.1/name/${c2}`),
+      getJSON(`https://restcountries.com/v3.1/name/${c3}`),
+    ]); //if one promise rejects all reject
+    //console.log([data1.capital, data2.capital, data3.capital]);
+    console.log(data.map(d => d[0].capital));
+  } catch (err) {
+    console.error(err);
+  }
+};
+get3Countries('portugal', 'afghanistan', 'philippines');
+*/
+/*
+//////////// OTHER PROMISE COMBINATORS: RACE, ALLSETTLED, AND ANY
+
+//Promise.race takes an array of promises and settles once one of them settles. The winning promise is the one that is returned.
+(async function () {
+  const res = await Promise.race([
+    getJSON(`https://restcountries.com/v3.1/name/italy`),
+    getJSON(`https://restcountries.com/v3.1/name/france`),
+    getJSON(`https://restcountries.com/v3.1/name/germany`),
+  ]);
+  console.log(res[0]);
+})();
+//Use a timeout to race a call to prevent long calls
+const timeout = function (sec) {
+  return new Promise(function (_, reject) {
+    setTimeout(function () {
+      reject(new Error('Request took too long'));
+    }, sec);
+  });
+};
+Promise.race([
+  getJSON(`https://restcountries.com/v3.1/name/germany`),
+  timeout(1000),
+])
+  .then(res => console.log(res[0]))
+  .catch(err => console.error(err));
+
+// Promise.allSettled takes an array of promises and returns an array of all the settled promises (even if rejected), won't short circuit.
+Promise.allSettled([
+  Promise.resolve('Success'),
+  Promise.reject('Error'),
+  Promise.resolve('Success'),
+]).then(res => console.log(res));
+//will result in error below
+Promise.all([
+  Promise.resolve('Success'),
+  Promise.reject('Error'),
+  Promise.resolve('Success'),
+]).then(res => console.log(res));
+
+//Promise.any [ES2021] ignores rejected promises returns fulfilled.
+Promise.any([
+  Promise.resolve('Success'),
+  Promise.reject('Error'),
+  Promise.resolve('Success'),
+]).then(res => console.log(res));
+*/
+
+//////////////////////////////////////////////////////
+//Coding Challenge #3
+/*
+Your tasks:
+Part I
+1. Write an async function 'loadNPause' that recreates challenge #2, this time using async/await (only the part where the promise is consumed, reuse the 'createImage' function from before)
+2. Compare the two versions, think about the big differences, see which one you like more.
+3. Don't froget to test the error handler, and set the network speed to 'Fast 3G' in the dev tools Network tab.
+
+Part II
+1. Create an async function 'loadAll' that receives an array of image paths 'imgArr'.
+2. Use .map to loop over the array, to load all the images with the 'createImage' function (call the resulting array 'imgs').
+3. Check out the 'imgs' array in the console! Is it like you expected?
+4. Use a promise combinator function to actually get the images from the array.
+5. Add the 'parallel' class to all images (it has some css styles)
+test data part 2: ['img/img1-jpg','img/img2-jpg','img/img3-jpg']. To test, turn off the 'loadNPause' function.*/
+const wait = seconds => {
+  return new Promise(resolve => {
+    setTimeout(resolve, seconds * 1000);
+  });
+};
+
+const imgContainer = document.querySelector('.images');
+const imageArray = ['img/img-1.jpg', 'img/img-2.jpg', 'img/img-3.jpg'];
+const createImage = function (imgPath) {
+  return new Promise(function (resolve, reject) {
+    const img = document.createElement('img');
+    img.src = imgPath;
+
+    img.addEventListener('load', function () {
+      imgContainer.append(img);
+      resolve(img);
+    });
+
+    img.addEventListener('error', function () {
+      reject(new Error('Image not found'));
+    });
+  });
+};
+let currentImg;
+
+const loadNPause = async function (img1, img2) {
+  try {
+    const image1 = await createImage(img1);
+    currentImg = image1;
+    await wait(2);
+    currentImg.style.display = 'none';
+    await wait(2);
+    const image2 = await createImage(img2);
+    currentImg = image2;
+    await wait(2);
+    currentImg.style.display = 'none';
+  } catch (err) {
+    console.error(`${err.message}`);
+  }
+};
+//loadNPause('img/img-1.jpg', 'img/img-2.jpg');
+
+const loadAll = async function (imgArr) {
+  try {
+    const imgs = await imgArr.map(arr => createImage(arr));
+    console.log(imgs);
+    const finalArr = await Promise.all(imgs);
+    console.log(finalArr);
+    finalArr.forEach(img => img.classList.add('parallel'));
+  } catch (err) {
+    console.error(`${err.message}`);
+  }
+};
+loadAll(imageArray);
